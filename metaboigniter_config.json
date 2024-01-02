@@ -1,0 +1,4 @@
+{
+    "models_dir_ms2query_pos": "/data_5t/lilin/products/metaboigniter/model_dir_ms2query_pos",
+    "model_dir_ms2query_neg" : "/data_5t/lilin/products/metaboigniter/model_dir_ms2query_neg"
+}

@@ -27,11 +27,7 @@ def make_csv_file(analysis_path, patient_name, sample_type_l, sample_name_l, sam
     return csv_file
 
 
-def make_params_file() -> str:
-    pass
-
-
-def steward(config_file_path, metaboigniter_path, send_message_script) -> None:
+def steward(config_file_path, metaboigniter_path, send_message_script, metaboigniter_config_d) -> None:
     start_time    = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     analysis_path = os.path.dirname(config_file_path)
     os.chdir(analysis_path)
@@ -94,18 +90,24 @@ def steward(config_file_path, metaboigniter_path, send_message_script) -> None:
     os.chdir(analysis_path)
     csv_file = make_csv_file(analysis_path, patient_name,
                              sample_type_l, sample_name_l, sample_file_l)
+    if polarity == 'positive':
+        models_dir_ms2query = metaboigniter_config_d['models_dir_ms2query_pos']
+    else:
+        models_dir_ms2query = metaboigniter_config_d['models_dir_ms2query_neg']
     # make the parms.json file
     params_d = {
-        'identification'       : identification,
-        'polarity'             : polarity,
-        'ms2_collection_model' : ms2_collection_model,
-        'run_sirius'           : run_sirius,
-        'sirius_split'         : sirius_split,
-        'mgf_splitmgf_pyopenms': int(mgf_splitmgf_pyopenms),
-        'run_ms2query'         : run_ms2query,
-        'requantification'     : requantification,
-        'input'                : csv_file,
-        'outdir'               : 'results'
+        'identification'        : identification,
+        'polarity'              : polarity,
+        'ms2_collection_model'  : ms2_collection_model,
+        'run_sirius'            : run_sirius,
+        'sirius_split'          : sirius_split,
+        'mgf_splitmgf_pyopenms' : int(mgf_splitmgf_pyopenms),
+        'run_ms2query'          : run_ms2query,
+        'offline_model_ms2query': True,
+        'models_dir_ms2query'   : models_dir_ms2query,
+        'requantification'      : requantification,
+        'input'                 : csv_file,
+        'outdir'                : 'results'
     }
     params_file_path = '{}/params.json'.format(analysis_path)
     with open(params_file_path, 'w') as params_f:
@@ -159,9 +161,12 @@ def main() -> None:
                         help='the full path for the shell script: sendMessage.sh')
     args = parser.parse_args()
     config_file_path = args.cfp
-    rnaseq_path = args.rnaseq_path
+    metaboigniter_path = args.metaboigniter_path
     send_message_script = send_message_script
-    steward(config_file_path, rnaseq_path, send_message_script)
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    with open('{}/metaboigniter_config.json'.format(script_path), 'r') as metaboigniter_config_f:
+        metaboigniter_config_d = json.load(metaboigniter_config_f)
+    steward(config_file_path, metaboigniter_path, send_message_script, metaboigniter_config_d)
 
 
 if __name__ == '__main__':
